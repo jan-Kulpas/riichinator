@@ -1,6 +1,6 @@
 [package]
 name = "riichinator"
-version = "0.1.0"
+version = "0.1.1"
 entrypoint = "lib.typ"
 authors = ["hemidemisemipresent (https://github.com/hemisemidemipresent)"]
 license = "MIT"

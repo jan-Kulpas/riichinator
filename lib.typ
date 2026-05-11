@@ -4,6 +4,7 @@
 #let TILE-BG = rgb("f5f0eb")
 #let TILE-COVER = rgb("C7AB90")
 #let TILE-OUTLINE = rgb("#efdecd")
+#let TILE-STROKE = 0.5pt + TILE-OUTLINE
 
 /// Renders a single tile as an inline element
 ///
@@ -19,6 +20,15 @@
   /// height of the tile, INLINE_TILE_HEIGHT = `2em` by default
   /// -> length
   tile-height: INLINE-TILE-HEIGHT,
+  /// background color of the tile, TILE-BG = `rgb("f5f0eb")` by default
+  /// -> color
+  tile-fill: TILE-BG,
+  /// background color of the face-down tile, TILE-COVER = `rgb("C7AB90")` by default
+  /// -> color
+  tile-cover-fill: TILE-COVER,
+  /// stroke of the tile border, TILE-STROKE = `0.5pt + rgb("#efdecd")` by default
+  /// -> stroke
+  tile-stroke: TILE-STROKE,
   /// angle to rotate the tile by
   /// -> angle
   rotation: 0deg,
@@ -32,8 +42,8 @@
   // flipped tile
   if tile-name == "0z" {
     base-tile = box(
-      fill: TILE-COVER,
-      stroke: 0.5pt + TILE-OUTLINE,
+      fill: tile-cover-fill,
+      stroke: tile-stroke,
       height: tile-height,
       width: TILE-RATIO * tile-height,
       radius: 0.25em,
@@ -43,9 +53,9 @@
   } else {
     // TODO: input validation
     base-tile = box(
-      fill: TILE-BG,
+      fill: tile-fill,
       image("assets/" + tile-name + ".svg", height: 9 / 10 * tile-height),
-      stroke: 0.5pt + TILE-OUTLINE,
+      stroke: tile-stroke,
       radius: 0.25em,
       inset: (x: 2.5 / 100 * tile-height, y: 5 / 100 * tile-height),
     )
@@ -57,7 +67,13 @@
   )
 }
 
-#let parse-notation(notation, tile-height: INLINE-TILE-HEIGHT) = {
+#let parse-notation(
+  notation,
+  tile-height: INLINE-TILE-HEIGHT,
+  tile-fill: TILE-BG,
+  tile-cover-fill: TILE-COVER,
+  tile-stroke: TILE-STROKE,
+) = {
   // e.g. 13 = 13 blank tiles
   if type(notation) == int {
     notation = "0" * notation + "z"
@@ -100,8 +116,20 @@
                 -90deg,
                 reflow: true,
                 (
-                  tile(num.at(0) + chr, tile-height: tile-height),
-                  tile(num.at(1) + chr, tile-height: tile-height),
+                  tile(
+                    num.at(0) + chr,
+                    tile-height: tile-height,
+                    tile-fill: tile-fill,
+                    tile-cover-fill: tile-cover-fill,
+                    tile-stroke: tile-stroke,
+                  ),
+                  tile(
+                    num.at(1) + chr,
+                    tile-height: tile-height,
+                    tile-fill: tile-fill,
+                    tile-cover-fill: tile-cover-fill,
+                    tile-stroke: tile-stroke,
+                  ),
                 ).join(),
               ),
             ),
@@ -116,6 +144,9 @@
         tiles.push(tile(
           num + chr,
           tile-height: tile-height,
+          tile-fill: tile-fill,
+          tile-cover-fill: tile-cover-fill,
+          tile-stroke: tile-stroke,
           rotation: rotation,
         ))
       }
@@ -124,10 +155,12 @@
       modifiers = ()
     } else if chr == "-" {
       // empty space
-      tiles.push(tile(
-        "-",
-        tile-height: tile-height,
-      ))
+      tiles.push(
+        tile(
+          "-",
+          tile-height: tile-height,
+        ),
+      )
     }
   }
   return tiles
@@ -147,9 +180,24 @@
   hand,
   /// height of the tile, INLINE_TILE_HEIGHT = `2em` by default
   /// -> length
-  tile-height: INLINE-TILE-HEIGHT
+  tile-height: INLINE-TILE-HEIGHT,
+  /// background color of the tile, TILE-BG = `rgb("f5f0eb")` by default
+  /// -> color
+  tile-fill: TILE-BG,
+  /// background color of the face-down tile, TILE-COVER = `rgb("C7AB90")` by default
+  /// -> color
+  tile-cover-fill: TILE-COVER,
+  /// stroke of the tile border, TILE-STROKE = `0.5pt + rgb("#efdecd")` by default
+  /// -> stroke
+  tile-stroke: TILE-STROKE,
 ) = {
-  return parse-notation(hand, tile-height: tile-height).join()
+  return parse-notation(
+    hand,
+    tile-height: tile-height,
+    tile-fill: tile-fill,
+    tile-cover-fill: tile-cover-fill,
+    tile-stroke: tile-stroke,
+  ).join()
 }
 /// Renders a discard pool
 ///
@@ -165,7 +213,7 @@
   river,
   /// height of the tile, INLINE_TILE_HEIGHT = `2em` by default
   /// -> length
-  tile-height: INLINE-TILE-HEIGHT
+  tile-height: INLINE-TILE-HEIGHT,
 ) = {
   let tiles = parse-notation(river, tile-height: tile-height)
 
@@ -190,12 +238,12 @@
 /// ```
 /// -> content
 #let riichi-stick(
-    /// width of the riichi stick
-    /// -> length
-    width,
-    /// height of the riichi stick
-    /// -> length
-    height
+  /// width of the riichi stick
+  /// -> length
+  width,
+  /// height of the riichi stick
+  /// -> length
+  height,
 ) = {
   rect(
     height: height,
@@ -215,12 +263,12 @@
 /// ```
 /// -> content
 #let honba-stick(
-    /// width of the honba stick
-    /// -> length
-    width,
-    /// height of the honba stick
-    /// -> length
-    height
+  /// width of the honba stick
+  /// -> length
+  width,
+  /// height of the honba stick
+  /// -> length
+  height,
 ) = {
   rect(
     height: height,
@@ -340,8 +388,8 @@
 ) = layout(size => {
   let MAIN-SIZE = size.width
   // prevent infinities
-  if MAIN-SIZE == float.inf * 1pt{
-      MAIN-SIZE = 50em
+  if MAIN-SIZE == float.inf * 1pt {
+    MAIN-SIZE = 50em
   }
   let tile-height = MAIN-SIZE / 15
   let TILE-WIDTH = tile-height * TILE-RATIO
