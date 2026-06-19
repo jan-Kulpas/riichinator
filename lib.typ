@@ -214,9 +214,23 @@
   /// height of the tile, INLINE_TILE_HEIGHT = `2em` by default
   /// -> length
   tile-height: INLINE-TILE-HEIGHT,
+  /// background color of the tile, TILE-BG = `rgb("f5f0eb")` by default
+  /// -> color
+  tile-fill: TILE-BG,
+  /// background color of the face-down tile, TILE-COVER = `rgb("C7AB90")` by default
+  /// -> color
+  tile-cover-fill: TILE-COVER,
+  /// stroke of the tile border, TILE-STROKE = `0.5pt + rgb("#efdecd")` by default
+  /// -> stroke
+  tile-stroke: TILE-STROKE,
 ) = {
-  let tiles = parse-notation(river, tile-height: tile-height)
-
+  let tiles = parse-notation(
+    river,
+    tile-height: tile-height,
+    tile-fill: tile-fill,
+    tile-cover-fill: tile-cover-fill,
+    tile-stroke: tile-stroke,
+  )
 
   if tiles.len() > 12 {
     tiles.insert(12, "\n")
