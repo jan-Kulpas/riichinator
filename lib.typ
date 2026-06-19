@@ -101,6 +101,7 @@
   tile-shade-fill: TILE-SHADE,
   tile-stroke: TILE-STROKE,
   tile-highlight-stroke: TILE-HIGHLIGHT-STROKE,
+  spacing: none,
 ) = {
   // e.g. 13 = 13 blank tiles
   if type(notation) == int {
@@ -172,7 +173,7 @@
                     tile-shade-fill: curr-shade,
                     tile-stroke: tile-stroke,
                   ),
-                ).join(h(tile-stroke.thickness)),
+                ).join(h(spacing)),
               ),
             ),
           )
@@ -260,6 +261,7 @@
     tile-shade-fill: tile-shade-fill,
     tile-stroke: tile-stroke,
     tile-highlight-stroke: tile-highlight-stroke,
+    spacing: spacing,
   ).join(h(spacing))
 }
 /// Renders a discard pool
