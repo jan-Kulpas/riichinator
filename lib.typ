@@ -4,7 +4,9 @@
 #let TILE-BG = rgb("f5f0eb")
 #let TILE-COVER = rgb("C7AB90")
 #let TILE-OUTLINE = rgb("#efdecd")
+#let TILE-SHADE = black.transparentize(40%)
 #let TILE-STROKE = 0.5pt + TILE-OUTLINE
+#let TILE-HIGHLIGHT-STROKE = 0.5pt + red
 
 /// Renders a single tile as an inline element
 ///
@@ -26,6 +28,9 @@
   /// background color of the face-down tile, TILE-COVER = `rgb("C7AB90")` by default
   /// -> color
   tile-cover-fill: TILE-COVER,
+  /// color of the shade overlay to be drawn over the tile if any, `none` by default
+  /// -> color | none
+  tile-shade-fill: none,
   /// stroke of the tile border, TILE-STROKE = `0.5pt + rgb("#efdecd")` by default
   /// -> stroke
   tile-stroke: TILE-STROKE,
@@ -60,6 +65,27 @@
       inset: (x: 2.5 / 100 * tile-height, y: 5 / 100 * tile-height),
     )
   }
+
+  // adding shade overlay on top if specified
+  if tile-shade-fill != none {
+    base-tile = layout(bounds => {
+      let size = measure(base-tile, ..bounds)
+      let tile-shade-stroke = if type(tile-stroke) == stroke {
+        tile-stroke.thickness + tile-shade-fill.opacify(70%)
+      } else {
+        tile-shade-fill
+      }
+
+      base-tile
+      place(top + left, block(
+        ..size,
+        fill: tile-shade-fill,
+        stroke: tile-shade-stroke,
+        radius: 0.25em,
+      ))
+    })
+  }
+
   return box(
     rotate(rotation, base-tile, reflow: true),
     // baseline: tile-height / 2 - 0.35em, // idk it just looks the most correct
@@ -72,7 +98,9 @@
   tile-height: INLINE-TILE-HEIGHT,
   tile-fill: TILE-BG,
   tile-cover-fill: TILE-COVER,
+  tile-shade-fill: TILE-SHADE,
   tile-stroke: TILE-STROKE,
+  tile-highlight-stroke: TILE-HIGHLIGHT-STROKE,
 ) = {
   // e.g. 13 = 13 blank tiles
   if type(notation) == int {
@@ -88,6 +116,12 @@
     } else if chr == "'" {
       let previous-modifier = modifiers.pop()
       modifiers.push(previous-modifier + "r")
+    } else if chr == "?" {
+      let previous-modifier = modifiers.pop()
+      modifiers.push(previous-modifier + "s") // like "shaded"
+    } else if chr == "!" {
+      let previous-modifier = modifiers.pop()
+      modifiers.push(previous-modifier + "h") // like "highlighted"
     } else if chr == "\"" {
       // added/extended kan handling
       // combines the two rotated tiles into 1 object so "888\"8m" -> current-numbers = ("8", "88", "8"), modifiers = ("", "k", "")
@@ -107,11 +141,17 @@
       // this is where we take all of current-numbers and turn them into tiles
       for (i, num) in current-numbers.enumerate() {
         let modifier = modifiers.at(i)
+
+        let curr-shade = none
+        if "s" in modifier {
+          curr-shade = tile-shade-fill
+        }
+
         // added/extended kan handling
         if "k" in modifier {
           tiles.push(
             box(
-              height: 2 * tile-height * TILE-RATIO,
+              height: 2 * tile-height * TILE-RATIO + tile-stroke.thickness,
               rotate(
                 -90deg,
                 reflow: true,
@@ -121,6 +161,7 @@
                     tile-height: tile-height,
                     tile-fill: tile-fill,
                     tile-cover-fill: tile-cover-fill,
+                    tile-shade-fill: curr-shade,
                     tile-stroke: tile-stroke,
                   ),
                   tile(
@@ -128,9 +169,10 @@
                     tile-height: tile-height,
                     tile-fill: tile-fill,
                     tile-cover-fill: tile-cover-fill,
+                    tile-shade-fill: curr-shade,
                     tile-stroke: tile-stroke,
                   ),
-                ).join(),
+                ).join(h(tile-stroke.thickness)),
               ),
             ),
           )
@@ -141,12 +183,19 @@
         if "r" in modifier {
           rotation = -90deg
         }
+
+        let curr-stroke = tile-stroke
+        if "h" in modifier {
+          curr-stroke = tile-highlight-stroke
+        }
+
         tiles.push(tile(
           num + chr,
           tile-height: tile-height,
           tile-fill: tile-fill,
           tile-cover-fill: tile-cover-fill,
-          tile-stroke: tile-stroke,
+          tile-shade-fill: curr-shade,
+          tile-stroke: curr-stroke,
           rotation: rotation,
         ))
       }
@@ -187,17 +236,31 @@
   /// background color of the face-down tile, TILE-COVER = `rgb("C7AB90")` by default
   /// -> color
   tile-cover-fill: TILE-COVER,
+  /// color of the shade overlay to be drawn over the tile if any, TILE-SHADE = `rgb("00000099")` by default
+  /// -> color | none
+  tile-shade-fill: TILE-SHADE,
   /// stroke of the tile border, TILE-STROKE = `0.5pt + rgb("#efdecd")` by default
   /// -> stroke
   tile-stroke: TILE-STROKE,
+  /// stroke of the highlighted tile border, TILE-HIGHLIGHT-STROKE = `0.5pt + red` by default
+  /// -> stroke
+  tile-highlight-stroke: TILE-HIGHLIGHT-STROKE,
+  /// length of spacing between the tile. If not specified, half of `tile-stroke.thickness` will be used
+  /// -> length | none
+  spacing: none,
 ) = {
+  if spacing == none {
+    spacing = tile-stroke.thickness
+  }
   return parse-notation(
     hand,
     tile-height: tile-height,
     tile-fill: tile-fill,
     tile-cover-fill: tile-cover-fill,
+    tile-shade-fill: tile-shade-fill,
     tile-stroke: tile-stroke,
-  ).join()
+    tile-highlight-stroke: tile-highlight-stroke,
+  ).join(h(spacing))
 }
 /// Renders a discard pool
 ///
@@ -220,16 +283,30 @@
   /// background color of the face-down tile, TILE-COVER = `rgb("C7AB90")` by default
   /// -> color
   tile-cover-fill: TILE-COVER,
+  /// color of the shade overlay to be drawn over the tile if any, TILE-SHADE = `rgb("00000099")` by default
+  /// -> color | none
+  tile-shade-fill: TILE-SHADE,
   /// stroke of the tile border, TILE-STROKE = `0.5pt + rgb("#efdecd")` by default
   /// -> stroke
   tile-stroke: TILE-STROKE,
+  /// stroke of the highlighted tile border, TILE-HIGHLIGHT-STROKE = `0.5pt + red` by default
+  /// -> stroke
+  tile-highlight-stroke: TILE-HIGHLIGHT-STROKE,
+  /// length of spacing between the tile. If not specified, half of `tile-stroke.thickness` will be used
+  /// -> length | none
+  spacing: none,
 ) = {
+  if spacing == none {
+    spacing = tile-stroke.thickness
+  }
   let tiles = parse-notation(
     river,
     tile-height: tile-height,
     tile-fill: tile-fill,
     tile-cover-fill: tile-cover-fill,
+    tile-shade-fill: tile-shade-fill,
     tile-stroke: tile-stroke,
+    tile-highlight-stroke: tile-highlight-stroke,
   )
 
   if tiles.len() > 12 {
@@ -241,7 +318,7 @@
   let rows = tiles.split("\n")
   return stack(
     dir: ttb,
-    ..rows.map(row => row.join("")),
+    ..rows.map(row => row.join(h(spacing))),
   )
 }
 
